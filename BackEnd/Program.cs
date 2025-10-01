@@ -1,7 +1,7 @@
-
 using AblakKft.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+
 namespace AblakKft
 {
     public class Program
@@ -13,8 +13,7 @@ namespace AblakKft
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
             builder.Services.AddDbContext<DataBaseContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-            
-            
+
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -34,7 +33,6 @@ namespace AblakKft
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
