@@ -1,4 +1,5 @@
 using AblakKft.Data;
+using AblakKft.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -37,6 +38,15 @@ namespace AblakKft
             app.MapControllers();
 
             app.Run();
+        }
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            app.UseMiddleware<ApiKeyMiddleware>();
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }
