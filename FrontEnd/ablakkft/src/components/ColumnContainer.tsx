@@ -1,5 +1,5 @@
 // ColumnContainer.tsx
-import React from "react" // 🔸 opcionális, de a React.CSSProperties típus miatt jó ha van
+import React, { useState } from "react" // 🔸 opcionális, de a React.CSSProperties típus miatt jó ha van
 import { useSortable } from "@dnd-kit/sortable";
 import TrashIcon from "../icons/TrashIcon";
 import type { Column, Id } from "../types"
@@ -8,11 +8,13 @@ import { CSS } from "@dnd-kit/utilities"
 interface Props{
   column: Column;
   deleteColumn: (id: Id) => void;
+  updateColumn: (id: Id, title: string) => void;
 }
 
 function ColumnContainer(props: Props) {
-  const { column, deleteColumn } = props;
+  const { column, deleteColumn, updateColumn } = props;
 
+  const [editMode, setEditMode] = useState(false);
   const {
     setNodeRef,
     attributes,
@@ -26,21 +28,21 @@ function ColumnContainer(props: Props) {
       type: "Column",
       column,
     },
+    disabled: editMode,
   })
 
-  // 🔸 VÁLTOZÁS: style objektum mindig számítva van
+ 
   const style: React.CSSProperties = {
-    transition,                               // 🔸 kell a smooth animációhoz
-    transform: CSS.Transform.toString(transform), // 🔸 pozíció átadás a dnd-kit-nek
+    transition,                               
+    transform: CSS.Transform.toString(transform), 
   };
 
-  // 🔸 MEGTARTOTTAM az if ágat, de biztosítom, hogy a ref+style MINDKÉT ágban rajta legyen
   if (isDragging)
   {
     return (
       <div
-        ref={setNodeRef}          // 🔸 fontos: ref a rooton (most is itt van)
-        style={style}             // 🔸 és a style is a rooton (most is itt van)
+        ref={setNodeRef}         
+        style={style}            
         className="
           bg-columnBackgroundColor
           opacity-60
@@ -54,16 +56,14 @@ function ColumnContainer(props: Props) {
           flex-col
         "
       >
-        {/* Ha akarod, ide tehetsz egy egyszerű overlay/placeholder tartalmat */}
       </div>
     )
   }
 
-  // 🔸 NEM TÖRÖLTEM az if-et — csak a normál ág rootján is alkalmazom a ref+style-t
   return (
     <div
-      ref={setNodeRef}          // 🔸 EZ A LÉNYEG: ref a normál rooton is
-      style={style}             // 🔸 és style itt is, hogy a dnd-kit tudja animálni a visszahelyezést
+      ref={setNodeRef}         
+      style={style}            
       className="
         bg-columnBackgroundColor
         w-[350px]
@@ -77,6 +77,9 @@ function ColumnContainer(props: Props) {
       <div
         {...attributes}
         {...listeners}
+        onClick={() => {
+            setEditMode(true)
+        }}
         className="
           bg-mainBackgroundColor
           text-md
@@ -108,7 +111,22 @@ function ColumnContainer(props: Props) {
           >
             0
           </div>
-          {column.title}
+          {!editMode && column.title}
+          {editMode && (
+          <input 
+          className="bg-black focus:border-rose-500 border rounded outline-none px-2"
+          value={column.title}
+          onChange={(e) => updateColumn(column.id, e.target.value)}
+          autoFocus 
+          onBlur={() => {
+            setEditMode(false)
+            }} 
+            onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                setEditMode(false);
+            }}
+            />
+            )}
         </div>
         <button
           onClick={() => {
