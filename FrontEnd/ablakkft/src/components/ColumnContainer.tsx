@@ -2,17 +2,22 @@
 import React, { useState } from "react" // 🔸 opcionális, de a React.CSSProperties típus miatt jó ha van
 import { useSortable } from "@dnd-kit/sortable";
 import TrashIcon from "../icons/TrashIcon";
-import type { Column, Id } from "../types"
+import type { Column, Id, Task } from "../types"
 import { CSS } from "@dnd-kit/utilities"
+import PlusIcon from "../icons/PlusIcon";
+import TaskCard from "./TaskCard";
 
 interface Props{
   column: Column;
   deleteColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
+  createTask: (columnId: Id) => void
+  deleteTask: (id:Id) => void
+  tasks: Task[]
 }
 
 function ColumnContainer(props: Props) {
-  const { column, deleteColumn, updateColumn } = props;
+  const { column, deleteColumn, updateColumn, createTask, tasks, deleteTask } = props;
 
   const [editMode, setEditMode] = useState(false);
   const {
@@ -109,7 +114,7 @@ function ColumnContainer(props: Props) {
               rounded-full
             "
           >
-            0
+            
           </div>
           {!editMode && column.title}
           {editMode && (
@@ -145,7 +150,23 @@ function ColumnContainer(props: Props) {
         </button>
       </div>
 
-      <div className="flex flex-grow p-3">Content</div>
+      <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto">{tasks.map((task) => (
+        <TaskCard key={task.id} task={task} deleteTask={deleteTask}/>
+      ))
+    }</div>
+        <button 
+            className="flex gap-2 items-center 
+            border-columnBackgroundColor 
+            border-2 rounded 
+            p-4 border-x-columnBackgroundColor 
+            hover:bg-mainBackgroundColor 
+            hover:text-rose-500 active:bg-black"
+            onClick={() => {
+                createTask(column.id);
+            }}
+            >
+            <PlusIcon/>Add Task
+        </button>
     </div>
   )
 }
