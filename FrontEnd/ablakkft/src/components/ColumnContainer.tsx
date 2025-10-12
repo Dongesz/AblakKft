@@ -1,6 +1,6 @@
 // ColumnContainer.tsx
-import React, { useState } from "react" // 🔸 opcionális, de a React.CSSProperties típus miatt jó ha van
-import { useSortable } from "@dnd-kit/sortable";
+import React, { useMemo, useState } from "react" // 🔸 opcionális, de a React.CSSProperties típus miatt jó ha van
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import TrashIcon from "../icons/TrashIcon";
 import type { Column, Id, Task } from "../types"
 import { CSS } from "@dnd-kit/utilities"
@@ -35,6 +35,10 @@ function ColumnContainer(props: Props) {
     },
     disabled: editMode,
   })
+  
+  const tasksIds = useMemo(() => {
+    return tasks.map(task => task.id)
+  }, [tasks])
 
  
   const style: React.CSSProperties = {
@@ -150,10 +154,12 @@ function ColumnContainer(props: Props) {
         </button>
       </div>
 
+          <SortableContext items={tasksIds}>
       <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto">{tasks.map((task) => (
         <TaskCard key={task.id} task={task} deleteTask={deleteTask}/>
       ))
     }</div>
+    </SortableContext>
         <button 
             className="flex gap-2 items-center 
             border-columnBackgroundColor 
