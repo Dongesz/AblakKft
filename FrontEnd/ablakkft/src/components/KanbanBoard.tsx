@@ -36,10 +36,33 @@ function KanbanBoard() {
         (async () => {
             try {
                 const orders = await getAllOrders();
-                const mapped = orders.map(orderToTask);
-                setTasks(mapped as Task[]);
+                if (orders && orders.length > 0) {
+                    const mapped = orders.map(orderToTask);
+                    setTasks(mapped as Task[]);
+                } else {
+                    // fallback demo tasks when no orders
+                    const demoStatuses = ["Beerkezo", "feldolgozas alatt", "szallitasra kesz", "kiszallitva"]
+                    const demo = demoStatuses.map((s, idx) => ({
+                        id: `demo-${idx}`,
+                        columnId: s,
+                        content: `Demo order ${idx + 1}`,
+                        region: 'Budapest',
+                        createdAt: new Date().toISOString(),
+                    } as Task))
+                    setTasks(demo)
+                }
             } catch (err) {
                 console.error("Failed to load orders:", err);
+                // create demo tasks so Kanban shows something while backend is down
+                const demoStatuses = ["Beerkezo", "feldolgozas alatt", "szallitasra kesz", "kiszallitva"]
+                const demo = demoStatuses.map((s, idx) => ({
+                    id: `demo-${idx}`,
+                    columnId: s,
+                    content: `Demo order ${idx + 1}`,
+                    region: 'Budapest',
+                    createdAt: new Date().toISOString(),
+                } as Task))
+                setTasks(demo)
             }
         })()
     }, [])

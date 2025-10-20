@@ -12,7 +12,8 @@ export type OrderDto = {
 }
 
 const api = axios.create({
-  baseURL: "/api/orders",
+  // point directly to backend dev server
+  baseURL: "http://localhost:5121/api/orders",
   headers: { "Content-Type": "application/json" },
 });
 
