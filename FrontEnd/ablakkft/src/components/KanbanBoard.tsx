@@ -6,7 +6,7 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type Dra
 import { arrayMove, SortableContext } from "@dnd-kit/sortable"
 import { createPortal } from "react-dom"
 import TaskCard from "./TaskCard"
-import { getAllOrders, orderToTask } from "../services/orders"
+import { getAllOrders, orderToTask, createOrder, updateOrder, deleteOrder, getOrderById } from "../services/orders"
 
 
 function KanbanBoard() {
@@ -153,21 +153,49 @@ function KanbanBoard() {
 
   function createTask(columnId: Id)
   {
-    const newTask: Task = {
-        id: genereteId(),
-        columnId,
-                content: `Task ${tasks.length + 1}`,
-                region: selectedRegion === 'all' ? 'Budapest' : selectedRegion,
-                createdAt: new Date().toISOString(),
+        (async () => {
+            // If columnId is numeric (unlikely for columns), fallback to title
+            const status = typeof columnId === 'string' ? columnId : String(columnId)
+                    try {
+                    const dto = {
+                        userId: 1,
+                        productId: 1,
+                        quantity: 1,
+                        shipping_adress: 'Unknown',
+                        status: status,
+                        order_date: new Date().toISOString(),
+                    }
+                    const created = await createOrder(dto as any)
+                const task = orderToTask(created)
+                setTasks(prev => [...prev, task])
+            } catch (err) {
+                // fallback to local demo task
+                const newTask: Task = {
+                        id: genereteId(),
+                        columnId,
+                        content: `Task ${tasks.length + 1}`,
+                        region: selectedRegion === 'all' ? 'Budapest' : selectedRegion,
+                        createdAt: new Date().toISOString(),
+                }
+                setTasks(prev => [...prev, newTask])
+            }
+        })()
+  }
+
+    function deleteTask(id:Id){
+        (async () => {
+            try {
+                if (typeof id === 'number') {
+                    await deleteOrder(id)
+                }
+            } catch (err) {
+                console.error('Failed to delete order:', err)
+            } finally {
+                const newTasks = tasks.filter((task) => task.id !== id)
+                setTasks(newTasks);
+            }
+        })()
     }
-
-    setTasks([...tasks, newTask])
-  }
-
-  function deleteTask(id:Id){
-    const newTasks = tasks.filter((task) => task.id !== id)
-    setTasks(newTasks);
-  }
 
   function createNewColumn(){
     const columnToAdd:Column = {
@@ -261,7 +289,28 @@ function KanbanBoard() {
             const activeIndex = tasks.findIndex((t) => t.id === activeId)
 
                 tasks[activeIndex].columnId = overId
-          
+            // persist status change if this is a real order id
+            const movedTask = tasks[activeIndex]
+            if (typeof movedTask.id === 'number') {
+                const orderId = movedTask.id as number
+                const newStatus = typeof overId === 'string' ? overId : String(overId)
+                ;(async () => {
+                    try {
+                        const order = await getOrderById(orderId)
+                        const dto = {
+                            UserId: order.userId || 1,
+                            ProductId: order.productId || 1,
+                            Quantity: order.quantity || 1,
+                            Shipping_adress: order.shipping_adress || 'Unknown',
+                            Status: newStatus,
+                            Order_date: order.order_date || new Date().toISOString(),
+                        }
+                        await updateOrder(orderId, dto)
+                    } catch (err) {
+                        console.error('Failed to persist order status:', err)
+                    }
+                })()
+            }
             return arrayMove(tasks, activeIndex, activeIndex)
         })
     }

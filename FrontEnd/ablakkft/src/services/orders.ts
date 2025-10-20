@@ -28,12 +28,23 @@ export async function getOrderById(id: number): Promise<OrderDto> {
 }
 
 export async function createOrder(dto: Partial<OrderDto>) {
-  const res = await api.post<OrderDto>("/", dto);
+  const res = await api.post<OrderDto>("/", toBackendDto(dto));
   return res.data;
 }
 
 export async function updateOrder(id: number, dto: Partial<OrderDto>) {
-  await api.put(`/${id}`, dto);
+  await api.put(`/${id}`, toBackendDto(dto));
+}
+
+function toBackendDto(dto: Partial<OrderDto>) {
+  return {
+    UserId: dto.userId ?? dto.userId,
+    ProductId: dto.productId ?? dto.productId,
+    Quantity: dto.quantity ?? dto.quantity,
+    Shipping_adress: (dto as any).shipping_adress ?? (dto as any).shipping_adress,
+    Status: (dto as any).status ?? (dto as any).status,
+    Order_date: dto.order_date ?? dto.order_date,
+  }
 }
 
 export async function deleteOrder(id: number) {
