@@ -76,10 +76,13 @@ function TaskCard({ task, deleteTask }: Props) {
     onMouseLeave={() => {
         setMouseIsOver(false)
     }}>
-        {task.content}
+      <div className="flex flex-col w-full">
+        <div className="font-semibold">{task.content}</div>
+        <div className="text-xs opacity-70 mt-1">{task.region} • {task.createdAt ? new Date(task.createdAt).toLocaleString() : ''}</div>
+      </div>
 
     { mouseIsOver && <button onClick={() => {
-        deleteTask(task.id);
+      deleteTask(task.id);
     }} className="stroke-white absolute right-4 top-1/2-translate-y-1/2 bg-columnBackgroundColor p-2 rounded opacity-60 hover:opacity-100"><TrashIcon/></button>}
     </div>
   )

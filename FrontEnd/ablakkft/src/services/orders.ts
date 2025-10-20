@@ -56,7 +56,7 @@ export function orderToTask(order: OrderDto): Task {
     id: order.id,
     columnId: mapStatusToColumnId(order.status),
     content: `#${order.id} - P:${order.productId} Q:${order.quantity}`,
-    region: undefined,
+    region: extractRegionFromAddress(order.shipping_adress) ?? 'Unknown',
     customer: order.userId?.toString(),
     createdAt: order.order_date,
   } as Task;
@@ -70,4 +70,18 @@ function mapStatusToColumnId(status: string | null | undefined): number | string
   if (s.includes("szallit") || s.includes("ready")) return "szallitasra kesz";
   if (s.includes("kiszallit") || s.includes("delivered") ) return "kiszallitva";
   return "Beerkezo";
+}
+
+// try to infer a Hungarian county from the shipping address using a simple keyword list
+function extractRegionFromAddress(address?: string | null) {
+  if (!address) return undefined
+  const counties = [
+    'Budapest','Pest','Fejér','Győr-Moson-Sopron','Vas','Veszprém','Veszprem','Zala','Somogy','Tolna','Baranya','Bács-Kiskun','Bács','Békés','Csongrád','Hajdú-Bihar','Jász-Nagykun-Szolnok','Heves','Nógrád','Komárom-Esztergom','Szabolcs-Szatmár-Bereg','Borsod-Abaúj-Zemplén','Pest megye'
+  ]
+  const lower = address.toLowerCase()
+  for (const c of counties) {
+    const token = c.toLowerCase()
+    if (lower.includes(token)) return c
+  }
+  return undefined
 }
