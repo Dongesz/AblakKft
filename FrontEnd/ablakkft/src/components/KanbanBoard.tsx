@@ -9,7 +9,15 @@ import TaskCard from "./TaskCard"
 
 
 function KanbanBoard() {
-    const [columns, setColumns] = useState<Column[]>([])
+    const [columns, setColumns] = useState<Column[]>(() => {
+        const makeId = () => Math.floor(Math.random() * 1000000)
+        return [
+            { id: makeId(), title: "Beerkezo" },
+            { id: makeId(), title: "feldolgozas alatt" },
+            { id: makeId(), title: "szallitasra kesz" },
+            { id: makeId(), title: "kiszallitva" },
+        ]
+    })
     const columnsId = useMemo(() => columns.map(col => col.id), [columns])
     const [tasks, setTasks] = useState<Task[]>([]);
     const [activeColumn, setActiveColumn] = useState<Column | null>(null)
