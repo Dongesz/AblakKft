@@ -14,6 +14,8 @@ interface Props{
   createTask: (columnId: Id) => void
   deleteTask: (id:Id) => void
   tasks: Task[]
+  isDropTarget?: boolean
+  onOpenDetails?: (id: Id) => void
 }
 
 function ColumnContainer(props: Props) {
@@ -73,15 +75,7 @@ function ColumnContainer(props: Props) {
     <div
       ref={setNodeRef}         
       style={style}            
-      className="
-        bg-columnBackgroundColor
-        w-[350px]
-        h-[500px]
-        max-h-[500px]
-        rounded-md
-        flex
-        flex-col
-      "
+      className={"\n        bg-columnBackgroundColor\n        w-[350px]\n        h-[500px]\n        max-h-[500px]\n        rounded-md\n        flex\n        flex-col\n      " + (props.isDropTarget ? " ring-2 ring-rose-400" : "")}
     >
       <div
         {...attributes}
@@ -156,9 +150,9 @@ function ColumnContainer(props: Props) {
 
           <SortableContext items={tasksIds}>
       <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto">{tasks.map((task) => (
-        <TaskCard key={task.id} task={task} deleteTask={deleteTask}/>
-      ))
-    }</div>
+          <TaskCard key={task.id} task={task} deleteTask={deleteTask} onOpenDetails={props.onOpenDetails} />
+        ))
+      }</div>
     </SortableContext>
         <button 
             className="flex gap-2 items-center 

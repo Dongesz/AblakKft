@@ -8,12 +8,12 @@ import { useSortable } from "@dnd-kit/sortable";
 interface Props{
     task: Task;
     deleteTask: (id: Id) => void;
+  onOpenDetails?: (id: Id) => void;
 }
   
 
-function TaskCard({ task, deleteTask }: Props) {
-    const [mouseIsOver, setMouseIsOver]= useState(false)
-    const [editMode, setEditMode] = useState(false);
+function TaskCard({ task, deleteTask, onOpenDetails }: Props) {
+  const [mouseIsOver, setMouseIsOver]= useState(false)
 
     const {
     setNodeRef,
@@ -28,7 +28,6 @@ function TaskCard({ task, deleteTask }: Props) {
       type: "Task",
       task,
     },
-    disabled: editMode,
   })
 
     const style: React.CSSProperties = {
@@ -36,10 +35,10 @@ function TaskCard({ task, deleteTask }: Props) {
       transform: CSS.Transform.toString(transform), 
     };
 
-    const toggleEditMode = () => {
-        setEditMode((prev) => !prev)
-        setMouseIsOver(false)
-    }
+  const openDetails = () => {
+    setMouseIsOver(false)
+    if (typeof task.id === 'number' && onOpenDetails) onOpenDetails(task.id)
+  }
     if (isDragging)
     {
         return <div ref={setNodeRef}
@@ -48,37 +47,35 @@ function TaskCard({ task, deleteTask }: Props) {
     flex text-left rounded-xl border-2 border-rose-500 
     cursor-grab relative opacity-50"/>
     }
-    if (editMode){
-        <div 
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}>
-
-        </div>
-    }
     
+    
+  // Helper to format date nicely
+  const formatDate = (iso?: string) => {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleString(); } catch { return iso; }
+  }
+
   return (
-    <div
-    ref={setNodeRef}
-    style={style}
-    {...attributes}
-    {...listeners}
-    onClick={toggleEditMode} 
-    className="bg-mainBackgroundColor p-2.5 
-    h-[100px] min-h-[100px] items-center 
-    flex text-left rounded-xl hover:ring-2 
-    hover:ring-inset hover:ring-rose-500 
-    cursor-grab relative"
-    onMouseEnter={() => {
-        setMouseIsOver(true)
-    }}
-    onMouseLeave={() => {
-        setMouseIsOver(false)
-    }}>
+  <div
+  ref={setNodeRef}
+  style={style}
+  {...attributes}
+  {...listeners}
+  onClick={openDetails} 
+  className="bg-mainBackgroundColor p-2.5 
+  h-[100px] min-h-[100px] items-center 
+  flex text-left rounded-xl hover:ring-2 
+  hover:ring-inset hover:ring-rose-500 
+  cursor-grab relative"
+  onMouseEnter={() => {
+    setMouseIsOver(true)
+  }}
+  onMouseLeave={() => {
+    setMouseIsOver(false)
+  }}>
       <div className="flex flex-col w-full">
         <div className="font-semibold">{task.content}</div>
-        <div className="text-xs opacity-70 mt-1">{task.region} • {task.createdAt ? new Date(task.createdAt).toLocaleString() : ''}</div>
+        <div className="text-xs opacity-70 mt-1">{task.region ?? 'Unknown'} • {formatDate(task.createdAt)}</div>
       </div>
 
     { mouseIsOver && <button onClick={() => {

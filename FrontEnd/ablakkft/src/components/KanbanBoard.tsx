@@ -8,6 +8,7 @@ import { arrayMove, SortableContext } from "@dnd-kit/sortable"
 import { createPortal } from "react-dom"
 import TaskCard from "./TaskCard"
 import { getAllOrders, orderToTask, createOrder, updateOrder, deleteOrder, getOrderById } from "../services/orders"
+import OrderDetailsPanel from "./OrderDetailsPanel"
 
 
 function KanbanBoard() {
@@ -33,6 +34,7 @@ function KanbanBoard() {
     const [activeColumn, setActiveColumn] = useState<Column | null>(null)
     const [activeTask, setActiveTask] = useState<Task | null>(null)
     const [dropTargetColumnId, setDropTargetColumnId] = useState<Id | null>(null)
+    const [openOrderId, setOpenOrderId] = useState<number | null>(null)
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -104,6 +106,7 @@ function KanbanBoard() {
                         createTask={createTask}
                         tasks = {tasks.filter(task => ((String(task.columnId) === String(col.id) || task.columnId === col.title) && (selectedRegion === 'all' || task.region === selectedRegion))).slice().sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''))}
                         deleteTask={deleteTask}
+                        onOpenDetails={(id) => setOpenOrderId(typeof id === 'number' ? id : null)}
                         />
                     ))}
             </SortableContext>
@@ -150,6 +153,9 @@ function KanbanBoard() {
                 }
             </DragOverlay>,
             document.body
+        )}
+        {openOrderId !== null && (
+            <OrderDetailsPanel orderId={openOrderId} onClose={() => setOpenOrderId(null)} />
         )}
         
         </DndContext>
