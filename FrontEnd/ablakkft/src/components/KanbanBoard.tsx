@@ -32,40 +32,29 @@ function KanbanBoard() {
             }
         })
     )
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     useEffect(() => {
         (async () => {
+            setLoading(true)
+            setError(null)
             try {
                 const orders = await getAllOrders();
-                if (orders && orders.length > 0) {
-                    const mapped = orders.map(orderToTask);
-                    setTasks(mapped as Task[]);
-                } else {
-                    // fallback demo tasks when no orders
-                    const demoStatuses = ["Beerkezo", "feldolgozas alatt", "szallitasra kesz", "kiszallitva"]
-                    const demo = demoStatuses.map((s, idx) => ({
-                        id: `demo-${idx}`,
-                        columnId: s,
-                        content: `Demo order ${idx + 1}`,
-                        region: 'Budapest',
-                        createdAt: new Date().toISOString(),
-                    } as Task))
-                    setTasks(demo)
-                }
-            } catch (err) {
+                const mapped = (orders || []).map(orderToTask);
+                setTasks(mapped as Task[]);
+            } catch (err: any) {
                 console.error("Failed to load orders:", err);
-                // create demo tasks so Kanban shows something while backend is down
-                const demoStatuses = ["Beerkezo", "feldolgozas alatt", "szallitasra kesz", "kiszallitva"]
-                const demo = demoStatuses.map((s, idx) => ({
-                    id: `demo-${idx}`,
-                    columnId: s,
-                    content: `Demo order ${idx + 1}`,
-                    region: 'Budapest',
-                    createdAt: new Date().toISOString(),
-                } as Task))
-                setTasks(demo)
+                setError(err?.message ?? String(err))
+                setTasks([])
+            } finally {
+                setLoading(false)
             }
         })()
     }, [])
+  
+    // render loading / error states
+    if (loading) return <div className="p-8">Loading orders...</div>
+    if (error) return <div className="p-8 text-red-500">Error loading orders: {error}</div>
   return (
     <div className="
         m-auto
@@ -298,14 +287,14 @@ function KanbanBoard() {
                     try {
                         const order = await getOrderById(orderId)
                         const dto = {
-                            UserId: order.userId || 1,
-                            ProductId: order.productId || 1,
-                            Quantity: order.quantity || 1,
-                            Shipping_adress: order.shipping_adress || 'Unknown',
-                            Status: newStatus,
-                            Order_date: order.order_date || new Date().toISOString(),
+                            userId: order.userId || 1,
+                            productId: order.productId || 1,
+                            quantity: order.quantity || 1,
+                            shipping_adress: order.shipping_adress || 'Unknown',
+                            status: newStatus,
+                            order_date: order.order_date || new Date().toISOString(),
                         }
-                        await updateOrder(orderId, dto)
+                        await updateOrder(orderId, dto as any)
                     } catch (err) {
                         console.error('Failed to persist order status:', err)
                     }
