@@ -8,4 +8,8 @@ export type Task = {
     id: Id;
     columnId: Id;
     content: string;
+    // optional metadata for filtering / display
+    region?: string; // e.g. megye
+    customer?: string;
+    createdAt?: string; // ISO date
 }

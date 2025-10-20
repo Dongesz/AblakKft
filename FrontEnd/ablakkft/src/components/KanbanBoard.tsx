@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import PlusIcon from "../icons/PlusIcon"
 import type { Column, Id, Task } from "../types"
 import ColumnContainer from "./ColumnContainer"
@@ -6,6 +6,7 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type Dra
 import { arrayMove, SortableContext } from "@dnd-kit/sortable"
 import { createPortal } from "react-dom"
 import TaskCard from "./TaskCard"
+import { getAllOrders, orderToTask } from "../services/orders"
 
 
 function KanbanBoard() {
@@ -20,6 +21,8 @@ function KanbanBoard() {
     })
     const columnsId = useMemo(() => columns.map(col => col.id), [columns])
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [selectedRegion, setSelectedRegion] = useState<string>("all")
+    const regions = ["all", "Budapest", "Pest", "Fejér", "Győr-Moson-Sopron"]
     const [activeColumn, setActiveColumn] = useState<Column | null>(null)
     const [activeTask, setActiveTask] = useState<Task | null>(null)
     const sensors = useSensors(
@@ -29,6 +32,17 @@ function KanbanBoard() {
             }
         })
     )
+    useEffect(() => {
+        (async () => {
+            try {
+                const orders = await getAllOrders();
+                const mapped = orders.map(orderToTask);
+                setTasks(mapped as Task[]);
+            } catch (err) {
+                console.error("Failed to load orders:", err);
+            }
+        })()
+    }, [])
   return (
     <div className="
         m-auto
@@ -41,6 +55,14 @@ function KanbanBoard() {
         px-[40px]
     ">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragOver={onDragOver}>
+        <div className="mb-4 flex items-center gap-4">
+            <label className="text-sm">Szűrés megye szerint:</label>
+            <select className="bg-mainBackgroundColor px-2 py-1 rounded" value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)}>
+                {regions.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                ))}
+            </select>
+        </div>
         <div className="m-auto flex gap-4">
             <div className="flex gap-4">
                 <SortableContext items={columnsId}>
@@ -51,7 +73,7 @@ function KanbanBoard() {
                         deleteColumn={deleteColumn}
                         updateColumn={updateColumn}
                         createTask={createTask}
-                        tasks = {tasks.filter(task => task.columnId === col.id)}
+                        tasks = {tasks.filter(task => ((String(task.columnId) === String(col.id) || task.columnId === col.title) && (selectedRegion === 'all' || task.region === selectedRegion)))}
                         deleteTask={deleteTask}
                         />
                     ))}
@@ -89,7 +111,7 @@ function KanbanBoard() {
                     deleteColumn={deleteColumn}
                     updateColumn={updateColumn}
                     createTask={createTask}
-                    tasks = {tasks.filter(task => task.columnId === activeColumn.id)}
+                    tasks = {tasks.filter(task => (String(task.columnId) === String(activeColumn.id) || task.columnId === activeColumn.title))}
                     deleteTask={deleteTask}
                 />
                 ) 
@@ -111,7 +133,9 @@ function KanbanBoard() {
     const newTask: Task = {
         id: genereteId(),
         columnId,
-        content: `Task ${tasks.length + 1}`,
+                content: `Task ${tasks.length + 1}`,
+                region: selectedRegion === 'all' ? 'Budapest' : selectedRegion,
+                createdAt: new Date().toISOString(),
     }
 
     setTasks([...tasks, newTask])
@@ -132,10 +156,11 @@ function KanbanBoard() {
   }
 
   function deleteColumn(id: Id){
-    const filterColumns = columns.filter(col => col.id !== id)
-    setColumns(filterColumns)
-    const newTasks = tasks.filter((t) => t.columnId !== id)
-    setTasks(newTasks)
+        const filterColumns = columns.filter(col => col.id !== id)
+        setColumns(filterColumns)
+        const columnTitle = columns.find(c => c.id === id)?.title
+        const newTasks = tasks.filter((t) => !(String(t.columnId) === String(id) || (columnTitle !== undefined && t.columnId === columnTitle)))
+        setTasks(newTasks)
   }
 
   function updateColumn(id: Id, title: string)
@@ -219,7 +244,7 @@ function KanbanBoard() {
     }
   }
 
-  function genereteId(){
+function genereteId(){
     // generate rnd number(0-10000)
     return Math.floor(Math.random()*10001)
   }
